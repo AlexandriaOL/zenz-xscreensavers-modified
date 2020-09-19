@@ -1,0 +1,21 @@
+#!/bin/sh
+
+config="$1"
+target="$2"
+
+target_string="lavanet-$target"
+
+exists_p=$(grep -q "$target_string" $config)
+
+if [ ! $(grep -q "$target_string" "$config") ]; then
+       echo "Already exists in config"
+       exit 0
+fi
+
+printf "%b\n" \
+       "/programs" \
+       "a" \
+       "\t\t\t\t$target_string -root\t\t\t    \\\\n\\" \
+       "." \
+       "w" \
+       | ed "$config"

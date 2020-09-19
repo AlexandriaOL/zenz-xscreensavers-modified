@@ -1,3 +1,28 @@
 This is a modified version of Robert Zenz' lavanet xscreensaver.
 
-It has been altered to cycle through neon colours
+Written by Alexandria O'Leary during mid 2020-09
+
+* Versions
+    lavanet-neon   -   lavanet that slowly cycles through neon-styled colours
+
+    All of these are bugs, but I kept them around because they're funny:
+
+    lavanet-lol    -   A 'bug' with my initial implementation that I didn't realised existed at first. Highly amusing. It essentially randomizes the colours on a per-(tiny unit of time here) basis. Please don't use this if you're epileptic.
+
+    lavanet-pretty -   cycles through colours reasonably fast, most colours are complimented by the presence of another colour -- blue/red, for example. The net is really frantic in it's movement.
+
+    lavanet-wtf    -   idk how to describe this
+
+* Building
+** Examples:
+$ make neon
+
+$ sudo -E make install-neon
+
+$ make all
+
+$ sudo -E make install-all
+
+$ sudo make uninstall-all
+
+When installing, -E is required so the $HOME variable in your environment is preserved, otherwise we do not know which config file to edit. The program automagically edits the program into your xscreensaver config. However, it does not remove the appropriate line on uninstall.

@@ -2,6 +2,7 @@
  * lavanet.c
  *
  *      Author: Robert 'Bobby' Zenz
+ *
  */
 
 #include <math.h>
@@ -11,6 +12,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
+#include <time.h>
 
 #include "vroot.h"
 
@@ -32,9 +34,15 @@ struct line {
 	int value;
 };
 
-int targetRed = 0;
-int targetGreen = 255;
-int targetBlue = 255;
+typedef struct {
+	int red, blue, green;
+} Color;
+
+Color startColor = {
+    .red = 0,
+    .green = 255,
+    .blue = 255
+};
 
 // Global, sorry.
 int debug = FALSE;
@@ -45,7 +53,7 @@ float topChange = 0.1f;
 float topSpeed = 0.5f;
 
 float get_random() {
-	return ((float) rand() / RAND_MAX - 0.5f) * 2;
+	return ((float) rand() / (float)RAND_MAX - 0.5f) * 2;
 }
 
 ulong make_color(u_char red, u_char green, u_char blue) {
@@ -65,13 +73,42 @@ float sign(float x) {
 	return val - (x < 0);
 }
 
+int float_to_color_value(double in)
+{
+	return (in >= 1.0 ? 255 : (in <= 0.0 ? 0 : (int)in * 255.0));
+}
+
+Color cycle_hue(Color in)
+{
+    static int max = 255;
+    static int t = 0;
+    static int delta = 1;
+
+    int r = in.red;
+    int g = in.green;
+    int b = in.blue;
+
+    if (r == max && g < max && b == t)      { in.green += delta; }
+    else if (r > t && g == max && b == t)   { in.red -= delta; }
+    else if (r == t && g == max && b < max) { in.blue += delta; }
+    else if (r == t && g > t && b == max)   { in.green -= delta; }
+    else if (r < max && g == t && b == max) { in.red += delta; }
+    else if (r == max && g == t && b > t)   { in.blue -= delta; }
+
+    return in;
+}
+
 void draw_lines(struct line *lines, int lineCount, Display *dpy, GC g,
-		Pixmap pixmap) {
+				Pixmap pixmap, Color targetColor) {
 	int idx;
 	for (idx = 0; idx < lineCount; idx++) {
 		struct line *line = &lines[idx];
-		XSetForeground(dpy, g, make_color(targetRed * line->value, targetGreen
-				* line->value, targetBlue * line->value));
+		int targetRed = targetColor.red;
+		int targetGreen = targetColor.green;
+		int targetBlue = targetColor.blue;
+		XSetForeground(dpy, g, make_color(targetRed * line->value/30, targetGreen
+				* line->value/30, targetBlue * line->value/30));
+		/* XSetForeground(dpy, g, make_color(targetRed, targetGreen, targetBlue)); */
 		XDrawLine(dpy, pixmap, g, line->startX, line->startY, line->endX,
 				line->endY);
 	}
@@ -225,6 +262,7 @@ int main(int argc, char *argv[])
 	gettimeofday(&tv, NULL);
 	srand(tv.tv_sec);
 
+	Color targetColor = startColor;
 	struct vector points[pointCount];
 	struct vector velocities[pointCount];
 	int counter = 0;
@@ -275,6 +313,8 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		targetColor = cycle_hue(targetColor);
+
 		// Clear the pixmap used for double buffering
 		XSetBackground(dpy, g, BLACK);
 		XSetForeground(dpy, g, BLACK);
@@ -287,7 +327,7 @@ int main(int argc, char *argv[])
 		struct line *lines = malloc(sizeof(struct line));
 		int lineCount = gather_lines(points, &lines);
 		qsort(lines, lineCount, sizeof(struct line), sort_lines);
-		draw_lines(lines, lineCount, dpy, g, double_buffer);
+		draw_lines(lines, lineCount, dpy, g, double_buffer, targetColor);
 		free(lines);
 
 		XCopyArea(dpy, double_buffer, root, g, 0, 0, wa.width, wa.height, 0, 0);
