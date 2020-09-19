@@ -47,8 +47,8 @@ int debug = FALSE;
 int pointCount = 200;
 float minimumDistance = 100;
 int targetFps = 60;
-float topChange = 0.1f;
-float topSpeed = 0.5f;
+float topChange = 0.02f;
+float topSpeed = 0.1f;
 double hue = 0.0;
 
 float get_random() { return ((float)rand() / (float)RAND_MAX - 0.5f) * 2; }

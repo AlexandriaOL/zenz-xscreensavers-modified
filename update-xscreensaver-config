@@ -5,9 +5,7 @@ target="$2"
 
 target_string="lavanet-$target"
 
-exists_p=$(grep -q "$target_string" $config)
-
-if [ ! $(grep -q "$target_string" "$config") ]; then
+if grep -q "$target_string" $config; then
        echo "Already exists in config"
        exit 0
 fi
